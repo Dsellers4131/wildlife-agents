@@ -4,6 +4,8 @@ import os
 import json
 import re
 from dotenv import load_dotenv
+from tools.scoring import calculate_condition_score
+
 
 load_dotenv()
 
@@ -15,46 +17,43 @@ def analyze_conditions(data_package: dict) -> dict:
         temperature = 0.1
     )
 
+    scoring_result = calculate_condition_score(
+        data_package['weather'],
+        data_package['moon']
+    )
+
     prompt = PromptTemplate(
-        input_variables = ['weather', 'moon', 'summary'],
-        template ="""You are an expert wildlife biologist and hunting guide.
-        Analyze these conditions and score deer movement likelihood. 
-        
-        Weather: {weather}
-        Moon phase: {moon}
-        Analysis Summary: {summary}
-        
-        Scoring criteria:
-        - Barometric pressure 1010-1020 hPa = ideal
-        - Temp 35-65F = ideal, above 75F = poor
-        - Wind speed under 15mph = good, over 25mph = poor
-        - Last quarter or New moon = moderate activity
-        - Full moon = high nocturnal activity, low daytime activity
-        
-        You must respond with ONLY a JSON object. No explanation, no markdown, no backticks.
-        Respond exactly like this example:
-        {{"score": 7, "should_alert": true, "reasoning": "your reasoning here", "key_factors": ["factor1", "factor2"]}}"""
+        input_variables = ['score', 'weather', 'moon', 'summary'],
+        template="""You are an expert hunting guide explaining conditions to a hunter.
+
+The condition score is {score}/10. Here is the factor breakdown:
+{breakdown}
+
+Current weather: {weather}
+Moon phase: {moon}
+
+Write 2 sentences explaining these conditions to a hunter in plain English.
+Focus on what matters most and what they should do.
+Do not mention the numerical scores.
+Respond with only the 2 sentences, nothing else."""
     )
 
     chain = prompt | llm
-    response = chain.invoke({
+    reasoning = chain.invoke({
+        'score': scoring_result['score'],
+        'breakdown': str(scoring_result['factor_breakdown']),
         'weather': str(data_package['weather']),
-        'moon': str(data_package['moon']),
-        'summary': str(data_package.get('summary', ''))
+        'moon': str(data_package['moon'])
     })
 
-    cleaned = response.strip()
-    cleaned = re.sub(r'```json|```', '', cleaned).strip() # post processing ensure response is json
-    
-    match = re.search(r'\{.*\}', cleaned, re.DOTALL) # extracts only json more post processing
-    if not match:
-        raise ValueError(f'no json found in response: {cleaned}')
-    
-    result = json.loads(match.group())
+    return {
+        'score': scoring_result['score'],
+        'should_alert': scoring_result['should_alert'],
+        'reasoning': reasoning.strip(),
+        'key_factors': [
+            f"{k}: {v['score']}/{v['max']}" 
+            for k, v in scoring_result['factor_breakdown'].items()
+        ],
+        'factor_breakdown': scoring_result['factor_breakdown']
+    }
 
-    required_fields = ['score', 'should_alert', 'reasoning', 'key_factors']
-    for field in required_fields:
-        if field not in result:
-            raise ValueError(f'missing required field: {field}')
-        
-    return result
