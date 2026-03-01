@@ -1,4 +1,5 @@
-from langchain_ollama import OllamaLLM
+###from langchain_ollama import OllamaLLM
+from langchain_openai import ChatOpenAI
 from langchain_core.prompts import PromptTemplate
 from tools.weather_tool import get_weather_conditions
 from tools.moon_tool import get_moon_phase
@@ -8,11 +9,11 @@ from dotenv import load_dotenv
 load_dotenv()
 
 def collect_environmental_data(lat: float, lon: float) -> dict:
-    llm = OllamaLLM(
-        model = os.getenv('ollama_model', 'llama3.1:8b'),
-        base_url = os.getenv('ollama_base_url', 'http://localhost:11434'),
-        temperature = 0.1 ### - may want to increase this slightly will review after testing
-    )
+    llm = ChatOpenAI(
+    model="gpt-4o-mini",
+    api_key=os.getenv('openai_api_key'),
+    temperature=0.1
+)
 
     weather = get_weather_conditions(lat, lon)
     moon = get_moon_phase()
@@ -45,5 +46,5 @@ def collect_environmental_data(lat: float, lon: float) -> dict:
         'moon': str(moon)
     })
 
-    data_package['summary'] = summary
+    data_package['summary'] = summary.content
     return data_package

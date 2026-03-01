@@ -1,4 +1,5 @@
-from langchain_ollama import OllamaLLM
+###from langchain_ollama import OllamaLLM
+from langchain_openai import ChatOpenAI
 from langchain_core.prompts import PromptTemplate
 import os
 import json
@@ -11,11 +12,11 @@ load_dotenv()
 
 def analyze_conditions(data_package: dict) -> dict:
     
-    llm = OllamaLLM(
-        model = os.getenv('ollama_model', 'llama3.1:8b'),
-        base_url = os.getenv('ollama_base_url', 'http://localhost:11434'),
-        temperature = 0.1
-    )
+    llm = ChatOpenAI(
+    model="gpt-4o-mini",
+    api_key=os.getenv('openai_api_key'),
+    temperature=0.1
+)
 
     scoring_result = calculate_condition_score(
         data_package['weather'],
@@ -49,7 +50,7 @@ Respond with only the 2 sentences, nothing else."""
     return {
         'score': scoring_result['score'],
         'should_alert': scoring_result['should_alert'],
-        'reasoning': reasoning.strip(),
+        'reasoning': reasoning.content.strip(),
         'key_factors': [
             f"{k}: {v['score']}/{v['max']}" 
             for k, v in scoring_result['factor_breakdown'].items()
