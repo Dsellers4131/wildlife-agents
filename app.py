@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-logo_path = 'assets/wildlife_logo.png'
+
 
 # Deer tracks loader
 deer_tracks_loader = """
@@ -49,7 +49,7 @@ deer_tracks_loader = """
 
 st.set_page_config(
     page_title='Wildlife Condition Monitor',
-    page_icon=logo_path,
+    page_icon="",
     layout='centered'
 )
 
@@ -271,8 +271,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# ── HEADER ─────────────────────────────────────────────────
-st.image(logo_path, width=220)
+
 st.markdown("""
 <div style="margin-bottom:32px; padding-bottom:32px; border-bottom:1px solid rgba(245,166,35,0.15);">
   <div style="font-family:'Barlow Condensed',sans-serif; font-size:10px; font-weight:700;
