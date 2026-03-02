@@ -2,6 +2,8 @@
 
 > Real-time hunting condition intelligence powered by local AI — built as a demonstration 
 > of agentic automation engineering for Moultrie / EBSCO Industries.
+>
+> https://wildlife-agents-dbwg2ykh5gj4dkmuzfnzmn.streamlit.app/
 
 ![Python](https://img.shields.io/badge/Python-3.13-blue)
 ![LangChain](https://img.shields.io/badge/LangChain-1.x-green)
