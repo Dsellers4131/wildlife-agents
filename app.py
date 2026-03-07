@@ -476,3 +476,230 @@ if st.button("ANALYZE CONDITIONS", use_container_width=True):
     st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
     with st.expander("VIEW RAW DATA"):
         st.json(data_package)
+
+    # ── BUCK INTELLIGENCE SECTION ──────────────────────────────
+st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
+
+st.markdown("""
+<div style="margin-bottom:24px;">
+  <div style="font-family:'Barlow Condensed',sans-serif; font-size:10px; font-weight:700;
+              letter-spacing:5px; color:#f5a623; margin-bottom:8px;">
+    — AGENTIC INTELLIGENCE
+  </div>
+  <div style="font-family:'Barlow Condensed',sans-serif; font-size:36px; font-weight:900;
+              line-height:0.95; text-transform:uppercase; color:#e8e4d9; margin-bottom:8px;">
+    BUCK <span style="color:#f5a623;">INTELLIGENCE</span>
+  </div>
+  <p style="color:#7a7568; font-size:13px; line-height:1.6;">
+    Select a tracked buck. The agent analyzes his 30-day pattern history 
+    against live conditions and tells you exactly what to do.
+  </p>
+</div>
+""", unsafe_allow_html=True)
+
+from data.buck_profiles import BUCK_PROFILES
+from agents.buck_analyst import analyze_buck_opportunity
+
+st.markdown('<div class="section-label">SELECT YOUR BUCK</div>', unsafe_allow_html=True)
+
+selected_buck = st.selectbox(
+    label='Select buck',
+    options=list(BUCK_PROFILES.keys()),
+    format_func=lambda x: f"{x} — {BUCK_PROFILES[x]['nickname']}",
+    label_visibility='collapsed'
+)
+
+profile = BUCK_PROFILES[selected_buck]
+
+# Buck profile card
+st.markdown(f"""
+<div style="background:#1a1a18; border:1px solid rgba(255,255,255,0.06);
+            border-radius:6px; padding:20px; margin-bottom:20px;">
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+    <div>
+      <div style="font-family:'Barlow Condensed',sans-serif; font-size:10px;
+                  letter-spacing:3px; color:#7a7568; margin-bottom:4px;">ESTIMATED SCORE</div>
+      <div style="font-family:'Barlow Condensed',sans-serif; font-size:20px;
+                  font-weight:700; color:#f5a623;">{profile['estimated_score']}</div>
+    </div>
+    <div>
+      <div style="font-family:'Barlow Condensed',sans-serif; font-size:10px;
+                  letter-spacing:3px; color:#7a7568; margin-bottom:4px;">ESTIMATED AGE</div>
+      <div style="font-family:'Barlow Condensed',sans-serif; font-size:20px;
+                  font-weight:700; color:#e8e4d9;">{profile['estimated_age']}</div>
+    </div>
+    <div>
+      <div style="font-family:'Barlow Condensed',sans-serif; font-size:10px;
+                  letter-spacing:3px; color:#7a7568; margin-bottom:4px;">KEY TRIGGER</div>
+      <div style="font-family:'Barlow Condensed',sans-serif; font-size:13px;
+                  color:#e8e4d9;">{profile['key_trigger']}</div>
+    </div>
+    <div>
+      <div style="font-family:'Barlow Condensed',sans-serif; font-size:10px;
+                  letter-spacing:3px; color:#7a7568; margin-bottom:4px;">BEST STAND</div>
+      <div style="font-family:'Barlow Condensed',sans-serif; font-size:13px;
+                  color:#e8e4d9;">{profile['best_stand']}</div>
+    </div>
+  </div>
+  <div style="margin-top:16px; padding-top:16px; border-top:1px solid rgba(255,255,255,0.06);">
+    <div style="font-family:'Barlow Condensed',sans-serif; font-size:10px;
+                letter-spacing:3px; color:#7a7568; margin-bottom:4px;">⚠ CAUTION</div>
+    <div style="font-size:13px; color:#f5a623;">{profile['caution']}</div>
+  </div>
+</div>
+""", unsafe_allow_html=True)
+
+if st.button("GET BUCK RECOMMENDATION", use_container_width=True):
+
+    buck_loader = st.empty()
+    buck_loader.markdown("""
+    <p style='text-align:center; color:#7a7568; font-family:Barlow Condensed,sans-serif;
+    letter-spacing:3px; font-size:12px; padding:16px;'>
+    ANALYZING PATTERN HISTORY...
+    </p>
+    """, unsafe_allow_html=True)
+
+    # Use existing weather data if available, else fetch fresh
+    try:
+        buck_weather = data_package['weather']
+        buck_moon = data_package['moon']
+    except:
+        from tools.weather_tool import get_weather_conditions
+        from tools.moon_tool import get_moon_phase
+        buck_weather = get_weather_conditions(lat, lon)
+        buck_moon = get_moon_phase()
+
+    buck_result = analyze_buck_opportunity(selected_buck, buck_weather, buck_moon)
+
+    buck_loader.empty()
+
+    # Urgency banner
+    st.markdown(f"""
+    <div style="padding:14px 20px; margin-bottom:20px;
+                background: rgba(245,166,35,0.08);
+                border:1px solid {buck_result['urgency_color']};
+                border-radius:6px; display:flex; align-items:center; gap:12px;">
+      <div style="width:8px; height:8px; border-radius:50%;
+                  background:{buck_result['urgency_color']};
+                  box-shadow: 0 0 8px {buck_result['urgency_color']};
+                  animation: pulse 2s infinite; flex-shrink:0;"></div>
+      <div>
+        <div style="font-family:'Barlow Condensed',sans-serif; font-size:10px;
+                    letter-spacing:3px; color:#7a7568; margin-bottom:2px;">OPPORTUNITY LEVEL</div>
+        <div style="font-family:'Barlow Condensed',sans-serif; font-size:16px;
+                    font-weight:700; letter-spacing:3px;
+                    color:{buck_result['urgency_color']};">{buck_result['urgency']} — {selected_buck.upper()}</div>
+      </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # Agent recommendation
+    st.markdown(f"""
+    <div style="padding:24px; background:#1a1a18;
+                border-left:2px solid #f5a623;
+                border-radius:0 4px 4px 0; margin-bottom:20px;">
+      <div style="font-family:'Barlow Condensed',sans-serif; font-size:10px;
+                  font-weight:700; letter-spacing:3px; color:#f5a623; margin-bottom:12px;">
+        GUIDE RECOMMENDATION
+      </div>
+      <div style="font-size:15px; line-height:1.8; color:#e8e4d9;">
+        {buck_result['recommendation']}
+      </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # Stats row
+    st.markdown(f"""
+    <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:1px;
+                background:rgba(255,255,255,0.04); border-radius:6px;
+                overflow:hidden; margin-bottom:32px;">
+      <div style="background:#1a1a18; padding:16px; text-align:center;">
+        <div style="font-family:'Barlow Condensed',sans-serif; font-size:28px;
+                    font-weight:700; color:#e8e4d9;">{buck_result['total_sightings']}</div>
+        <div style="font-size:10px; letter-spacing:2px; color:#7a7568;
+                    font-family:'Barlow Condensed',sans-serif;">SIGHTINGS (30 DAYS)</div>
+      </div>
+      <div style="background:#1a1a18; padding:16px; text-align:center;">
+        <div style="font-family:'Barlow Condensed',sans-serif; font-size:28px;
+                    font-weight:700; color:#e8e4d9;">{buck_result['similar_sightings_count']}</div>
+        <div style="font-size:10px; letter-spacing:2px; color:#7a7568;
+                    font-family:'Barlow Condensed',sans-serif;">SIMILAR CONDITIONS</div>
+      </div>
+      <div style="background:#1a1a18; padding:16px; text-align:center;">
+        <div style="font-family:'Barlow Condensed',sans-serif; font-size:28px;
+                    font-weight:700; color:#f5a623;">{buck_result['condition_score']}/10</div>
+        <div style="font-size:10px; letter-spacing:2px; color:#7a7568;
+                    font-family:'Barlow Condensed',sans-serif;">CONDITION SCORE</div>
+      </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+# ── NATURAL LANGUAGE QUERY SECTION ─────────────────────────
+st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
+
+st.markdown("""
+<div style="margin-bottom:24px;">
+  <div style="font-family:'Barlow Condensed',sans-serif; font-size:10px; font-weight:700;
+              letter-spacing:5px; color:#f5a623; margin-bottom:8px;">
+    — ASK ANYTHING
+  </div>
+  <div style="font-family:'Barlow Condensed',sans-serif; font-size:36px; font-weight:900;
+              line-height:0.95; text-transform:uppercase; color:#e8e4d9; margin-bottom:8px;">
+    QUERY YOUR <span style="color:#f5a623;">CAMERA DATA</span>
+  </div>
+  <p style="color:#7a7568; font-size:13px; line-height:1.6;">
+    Ask a question in plain English. The agent reasons over 30 days 
+    of trail camera sighting data and answers like a seasoned guide.
+  </p>
+</div>
+""", unsafe_allow_html=True)
+
+from agents.query_agent import query_buck_data
+
+# Example questions
+st.markdown("""
+<div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px;">
+  <div style="font-family:'Barlow Condensed',sans-serif; font-size:11px; font-weight:700;
+              letter-spacing:2px; color:#7a7568; padding:6px 12px;
+              border:1px solid rgba(255,255,255,0.08); border-radius:4px;">
+    Try: "When does Ghost move?"
+  </div>
+  <div style="font-family:'Barlow Condensed',sans-serif; font-size:11px; font-weight:700;
+              letter-spacing:2px; color:#7a7568; padding:6px 12px;
+              border:1px solid rgba(255,255,255,0.08); border-radius:4px;">
+    Try: "Which buck should I hunt in high wind?"
+  </div>
+  <div style="font-family:'Barlow Condensed',sans-serif; font-size:11px; font-weight:700;
+              letter-spacing:2px; color:#7a7568; padding:6px 12px;
+              border:1px solid rgba(255,255,255,0.08); border-radius:4px;">
+    Try: "Best morning buck?"
+  </div>
+</div>
+""", unsafe_allow_html=True)
+
+user_question = st.text_input(
+    label='Ask your camera data',
+    placeholder='e.g. Which buck moves most in cold weather?',
+    label_visibility='collapsed'
+)
+
+if st.button("ASK", use_container_width=True):
+    if user_question:
+        with st.spinner("Analyzing sighting data..."):
+            answer = query_buck_data(user_question)
+
+        st.markdown(f"""
+        <div style="padding:24px; background:#1a1a18;
+                    border-left:2px solid #4a7c2f;
+                    border-radius:0 4px 4px 0; margin-top:16px;">
+          <div style="font-family:'Barlow Condensed',sans-serif; font-size:10px;
+                      font-weight:700; letter-spacing:3px; color:#4a7c2f; margin-bottom:12px;">
+            CAMERA DATA ANALYSIS
+          </div>
+          <div style="font-size:15px; line-height:1.8; color:#e8e4d9;">
+            {answer}
+          </div>
+        </div>
+        """, unsafe_allow_html=True)
+    else:
+        st.warning("Please enter a question.")  
