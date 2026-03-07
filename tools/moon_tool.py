@@ -10,23 +10,23 @@ def get_moon_phase() -> dict:
     now = datetime.utcnow()
 
     days_since = (now - known_new_moon).days
-    lunar_cycle = 29.53 
+    lunar_cycle = 29.53
     position = (days_since % lunar_cycle) / lunar_cycle
-    illumination = round((1 -abs(2 * position - 1)) * 100, 1)
+    illumination = round((1 - abs(2 * position - 1)) * 100, 1)
 
     if position < 0.125:
         phase = 'new moon'
     elif position < 0.25:
         phase = 'waxing crescent'
-    if position < 0.375:
+    elif position < 0.375:
         phase = 'first quarter'
     elif position < 0.5:
         phase = 'waxing gibbous'
-    if position < 0.625:
+    elif position < 0.625:
         phase = 'full moon'
     elif position < 0.75:
-        position = 'waning gibbous'
-    if position < 0.875:
+        phase = 'waning gibbous'
+    elif position < 0.875:
         phase = 'last quarter'
     else:
         phase = 'waning crescent'
@@ -36,5 +36,3 @@ def get_moon_phase() -> dict:
         'illumination': illumination,
         'position': round(position, 3)
     }
- 
-    

@@ -273,12 +273,9 @@ st.markdown("""
 
 
 st.markdown("""
-<div style="margin-bottom:32px; padding-bottom:32px; border-bottom:1px solid rgba(245,166,35,0.15);">
-  <div style="font-family:'Barlow Condensed',sans-serif; font-size:10px; font-weight:700;
-              letter-spacing:5px; color:#f5a623; margin-bottom:10px; display:flex;
-              align-items:center; gap:10px;">
-    <span style="display:inline-block; width:20px; height:1px; background:#f5a623;"></span>
-    LOCATE · ANALYZE · KNOCK EM DOWN
+<div style="font-family:'Barlow Condensed',sans-serif; font-size:11px; font-weight:700;
+              letter-spacing:5px; color:#f5a623; margin-bottom:10px;">
+    — LOCATE · ANALYZE · KNOCK EM DOWN
   </div>
   <div style="font-family:'Barlow Condensed',sans-serif; font-size:52px; font-weight:900;
               line-height:0.95; text-transform:uppercase; color:#e8e4d9; margin-bottom:12px;">
